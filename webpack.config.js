@@ -16,14 +16,13 @@ module.exports = {
       },
       {
         test: /\.(css|styl)$/,
-        exclude: /node_modules/,
         use: [
-          MiniCssExtractPlugin.loader,
+          'style-loader',
           {
-            loader: "css-loader",
+            loader: 'css-loader',
             options: {
               importLoaders: 1,
-              sourceMap: true
+              modules: true
             }
           },
           {
@@ -32,7 +31,22 @@ module.exports = {
               sourceMap: true
             }
           }
-        ]
+        ],
+        include: /\/components\/.*\.(css|styl)$/
+      },
+      {
+        test: /\.(css|styl)$/,
+        use: [
+          'style-loader',
+          'css-loader',
+          {
+            loader: "stylus-loader",
+            options: {
+              sourceMap: true
+            }
+          }
+        ],
+        exclude: /\/components\/.*\.(css|styl)$/
       }
     ]
   },
