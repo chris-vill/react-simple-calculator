@@ -46,8 +46,67 @@ const Calculator = ({ onClick, text }) => {
     </div>
   );
 
+  /*
+    -> 3 + 2 x 2
+    -> [ 3, +, 2, x, 2 ]
+    -> [ 3, + 4 ]
+    -> [ 7 ]
+  */
   function compute() {
-    console.log(expression);
+    iterate(
+      ['x', '÷'],
+      expression.match(/(([0-9]+\.*[0-9]*)|[+\-÷x])/g)
+    );
+
+    function iterate(operators, terms) {
+      const acc = [];
+
+      while(terms.length) {
+        const term = terms.splice(0, 1)[0];
+
+        if (operators.includes(term)) {
+          acc.push(
+            operate(
+              term,
+              acc.pop(),
+              terms.splice(0, 1)[0]
+            )
+          );
+
+        } else {
+          const num = Number(term);
+
+          acc.push(
+            isNaN(num)
+              ? term
+              : Number(term)
+          );
+        }
+      }
+
+      acc.length > 1
+        ? iterate(['+', '-'], acc)
+        : setExpression(acc[0]);
+    }
+
+    function operate(operator, left, right) {
+      const num1 = Number(left);
+      const num2 = Number(right);
+
+      switch(operator) {
+        case 'x':
+          return num1 * num2;
+
+        case '÷':
+          return num1 / num2;
+
+        case '+':
+          return num1 + num2;
+
+        case '-':
+          return num1 + num3;
+      }
+    }
   }
 
   function clear() {
