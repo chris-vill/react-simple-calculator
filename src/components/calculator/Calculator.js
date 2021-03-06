@@ -5,7 +5,8 @@ import { Button, Display } from '../';
 
 const Calculator = ({ onClick, text }) => {
 
-  const [ expression, setExpression ] = useState('100+20%');
+  // const [ expression, setExpression ] = useState('5+(10+(2+1))');
+  const [ expression, setExpression ] = useState('');
   const [ isParensOpen, toggleParens ] = useState(false);
   const [ isSuperscript, toggleSuperscript ] = useState(false);
 
@@ -46,7 +47,7 @@ const Calculator = ({ onClick, text }) => {
       {/* 6th row */}
       <Button onClick={ appendText } text="0"/>
       <Button onClick={ appendText } text="."/>
-      <Button onClick={ compute } text="="/>
+      <Button onClick={ calculate } text="="/>
       <Button onClick={ appendText } text="+"/>
     </div>
   );
@@ -60,50 +61,25 @@ const Calculator = ({ onClick, text }) => {
     -> 100 + 20%
     -> 100 + 100 * 0.2
   */
-  function compute() {
-    iterate(
-      expression.match(/(([0-9]+\.*[0-9]*)|[+\-÷x\^%])/g)
-    );
+  function calculate() {
+    // const expressionRegex = /((\(.+\)|[0-9]+\.*[0-9]*)|[+\-÷x\^%])/g;
+    const expressionRegex = /(([0-9]+\.*[0-9]*)|[+\-÷x\^%])/g;
+    const terms = expression
+      .match(expressionRegex)
+      .map(term => {
+        const num = Number(term);
+
+        return isNaN(num) ? term : num
+      });
+
+    iterate(terms);
 
     function iterate(terms) {
-      console.log(terms);
-
       const acc = [];
-      const operators = whichOperators(terms);
-
-      console.log(operators);
 
       while(terms.length) {
-        const term = terms.splice(0, 1)[0];
-
-        if (operators.includes(term)) {
-          if (term === '%') {
-            const additionalTerms = expand(
-              acc.pop(),
-              acc[ acc.length - 2 ]
-            );
-
-            acc.push(...additionalTerms);
-
-          } else {
-            acc.push(
-              operate(
-                term,
-                acc.pop(),
-                terms.splice(0, 1)[0]
-              )
-            );
-          }
-
-        } else {
-          const num = Number(term);
-
-          acc.push(
-            isNaN(num)
-              ? term
-              : Number(term)
-          );
-        }
+        let answer = compute(terms.splice(0, 1)[0], terms, acc);
+        acc.push(answer);
       }
 
       acc.length > 1
@@ -111,41 +87,37 @@ const Calculator = ({ onClick, text }) => {
         : setExpression(acc[0]);
     }
 
-    function operate(operator, left, right) {
-      const num1 = Number(left);
-      const num2 = Number(right);
+    function compute(term, terms, acc) {
+      const operators = ['^', '%', 'x', '÷', '+', '-'];
 
-      switch(operator) {
+      if (!operators.includes(term)) {
+        return term;
+      }
+
+      const num1 = acc.pop();
+      const num2 = term === '%'
+        ? acc[ acc.length - 2 ]
+        : terms.splice(0, 1)[0];
+
+      switch(term) {
         case '^':
-          return Math.pow(num1, num2);
+          return [ Math.pow(num1, num2) ];
+
+        case '%':
+          return [ num2, 'x', num1 / 100 ];
 
         case 'x':
-          return num1 * num2;
+          return [ num1 * num2 ];
 
         case '÷':
-          return num1 / num2;
+          return [ num1 / num2 ];
 
         case '+':
-          return num1 + num2;
+          return [ num1 + num2 ];
 
         case '-':
-          return num1 - num2;
+          return [ num1 - num2 ];
       }
-    }
-
-    function expand(percent, base) {
-      return [
-        base,
-        'x',
-        percent / 100
-      ]
-    }
-
-    function whichOperators(exp) {
-      return exp.includes('^') ? ['^']
-        : exp.includes('%') ? ['%']
-        : exp.includes('x') || exp.includes('÷') ? ['x', '÷']
-        : ['+', '-'];
     }
   }
 
