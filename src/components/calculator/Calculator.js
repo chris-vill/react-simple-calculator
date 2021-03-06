@@ -5,8 +5,8 @@ import { Button, Display } from '../';
 
 const Calculator = ({ onClick, text }) => {
 
-  // const [ expression, setExpression ] = useState('5+(10+(2+1))');
-  const [ expression, setExpression ] = useState('');
+  const [ expression, setExpression ] = useState('5+(10+(2+1))');
+  // const [ expression, setExpression ] = useState('');
   const [ isParensOpen, toggleParens ] = useState(false);
   const [ isSuperscript, toggleSuperscript ] = useState(false);
 
@@ -62,30 +62,11 @@ const Calculator = ({ onClick, text }) => {
     -> 100 + 100 * 0.2
   */
   function calculate() {
-    // const expressionRegex = /((\(.+\)|[0-9]+\.*[0-9]*)|[+\-÷x\^%])/g;
-    const expressionRegex = /(([0-9]+\.*[0-9]*)|[+\-÷x\^%])/g;
-    const terms = expression
-      .match(expressionRegex)
-      .map(term => {
-        const num = Number(term);
+    const expressionRegex = /((\(.+\)|[0-9]+\.*[0-9]*)|[+\-÷x\^%])/g;
+    const terms = identifyTerms(expression);
 
-        return isNaN(num) ? term : num
-      });
-
+    return;
     iterate(terms);
-
-    function iterate(terms) {
-      const acc = [];
-
-      while(terms.length) {
-        let answer = compute(terms.splice(0, 1)[0], terms, acc);
-        acc.push(answer);
-      }
-
-      acc.length > 1
-        ? iterate(acc)
-        : setExpression(acc[0]);
-    }
 
     function compute(term, terms, acc) {
       const operators = ['^', '%', 'x', '÷', '+', '-'];
@@ -118,6 +99,38 @@ const Calculator = ({ onClick, text }) => {
         case '-':
           return [ num1 - num2 ];
       }
+    }
+
+    function identifyTerms(exp) {
+      return exp
+        .match(expressionRegex)
+        .map(term => {
+          const num = Number(term);
+
+          if (term.includes('(')) {
+            return identifyTerms(
+              term.replace(/^\(|\)$/g, '')
+            );
+
+          } else if (isNaN(num)) {
+            return term;
+          }
+
+          return num;
+        });
+    }
+
+    function iterate(terms) {
+      const acc = [];
+
+      while(terms.length) {
+        let answer = compute(terms.splice(0, 1)[0], terms, acc);
+        acc.push(answer);
+      }
+
+      acc.length > 1
+        ? iterate(acc)
+        : setExpression(acc[0]);
     }
   }
 
