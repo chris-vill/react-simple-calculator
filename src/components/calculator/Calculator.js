@@ -5,8 +5,7 @@ import { Button, Display } from '../';
 
 const Calculator = ({ onClick, text }) => {
 
-  const [ expression, setExpression ] = useState('5+(10+(2+1))');
-  // const [ expression, setExpression ] = useState('');
+  const [ expression, setExpression ] = useState('');
   const [ isParensOpen, toggleParens ] = useState(false);
   const [ isSuperscript, toggleSuperscript ] = useState(false);
 
@@ -64,23 +63,27 @@ const Calculator = ({ onClick, text }) => {
   function calculate() {
     const expressionRegex = /((\(.+\)|[0-9]+\.*[0-9]*)|[+\-÷x\^%])/g;
     const terms = identifyTerms(expression);
+    const finalAnswer = iterate(terms);
 
-    return;
-    iterate(terms);
+    setExpression(finalAnswer);
 
-    function compute(term, terms, acc) {
+    function compute(currentTerm, terms, acc) {
       const operators = ['^', '%', 'x', '÷', '+', '-'];
 
-      if (!operators.includes(term)) {
-        return term;
+      if (!operators.includes(currentTerm)) {
+        return [ currentTerm ];
       }
 
       const num1 = acc.pop();
-      const num2 = term === '%'
+      let num2 = currentTerm === '%'
         ? acc[ acc.length - 2 ]
         : terms.splice(0, 1)[0];
 
-      switch(term) {
+      if (Array.isArray(num2)) {
+        num2 = iterate(num2);
+      }
+
+      switch(currentTerm) {
         case '^':
           return [ Math.pow(num1, num2) ];
 
@@ -101,6 +104,26 @@ const Calculator = ({ onClick, text }) => {
       }
     }
 
+    function iterate(terms) {
+      const acc = [];
+
+      while(terms.length) {
+        console.log('LOOP')
+        const currentTerm = terms.splice(0, 1)[0];
+        const answer = Array.isArray(currentTerm)
+          ? iterate(currentTerm)
+          : compute(currentTerm, terms, acc);
+
+        acc.push(...answer);
+      }
+
+      if (acc.length === 1) {
+        return acc[0];
+      }
+
+      return iterate(acc);
+    }
+
     function identifyTerms(exp) {
       return exp
         .match(expressionRegex)
@@ -118,19 +141,6 @@ const Calculator = ({ onClick, text }) => {
 
           return num;
         });
-    }
-
-    function iterate(terms) {
-      const acc = [];
-
-      while(terms.length) {
-        let answer = compute(terms.splice(0, 1)[0], terms, acc);
-        acc.push(answer);
-      }
-
-      acc.length > 1
-        ? iterate(acc)
-        : setExpression(acc[0]);
     }
   }
 
