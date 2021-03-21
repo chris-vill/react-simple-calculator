@@ -3,8 +3,9 @@ import classes from './Display.styl';
 
 const Display = ({ onChange, extClasses, value }) => {
 
+  const regex = /((\(.+\)|[0-9]+\.*[0-9]*)|[+\-÷x%]|\^[0-9]+)/g;
   const values = typeof value === 'string' && (
-    value.match(/((\(.+\)|[0-9]+\.*[0-9]*)|[+\-÷x%]|\^[0-9]+)/g) || []
+    value.match(regex) || []
   )
   .map((val, i) => val.includes('^')
     ? <sup key={ i }>{ val.match(/[0-9]+/g)[0] }</sup>
